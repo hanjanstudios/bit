@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bit Drawer">
+<title>Bit Drawer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a writers'-room desk with four drawers (tabs) — quick-capture bar, then a wall of index cards whose header rule takes the drawer's color. */
+:root{
+  --desk:#e9edf3; --card:#fffefb; --ink:#1d2433; --muted:#5d6678; --rule:#c9d6ea;
+  --red:#d6453d; --blue:#2c5fd6; --hi:#ffe45c; --line:#d5dbe5; --chip:#dfe5ef;
+  --c-skits:#d6453d; --c-stories:#2c5fd6; --c-novels:#1f8a5b; --c-videos:#c2410c;
+  --st1:#8a63d2; --st2:#2c5fd6; --st3:#c27a0e; --st4:#1f8a5b; --st5:#be185d;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --desk:#141821; --card:#1f2533; --ink:#eef1f7; --muted:#9ba5b8; --rule:#2c3549;
+  --red:#ff6b62; --blue:#7ea2ff; --hi:#d9b92a; --line:#323b4f; --chip:#2a3244;
+  --c-skits:#ff6b62; --c-stories:#7ea2ff; --c-novels:#4cc58e; --c-videos:#fb8c4a;
+  --st1:#b597ff; --st2:#7ea2ff; --st3:#f0a63a; --st4:#4cc58e; --st5:#f472b6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#141821; --card:#1f2533; --ink:#eef1f7; --muted:#9ba5b8; --rule:#2c3549;
+  --red:#ff6b62; --blue:#7ea2ff; --hi:#d9b92a; --line:#323b4f; --chip:#2a3244;
+  --c-skits:#ff6b62; --c-stories:#7ea2ff; --c-novels:#4cc58e; --c-videos:#fb8c4a;
+  --st1:#b597ff; --st2:#7ea2ff; --st3:#f0a63a; --st4:#4cc58e; --st5:#f472b6; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font:15px/1.5 var(--body)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:20px;padding-block:28px 60px;display:grid;gap:20px;--acc:var(--c-skits)}
+.wrap[data-sec="stories"]{--acc:var(--c-stories)}.wrap[data-sec="novels"]{--acc:var(--c-novels)}.wrap[data-sec="videos"]{--acc:var(--c-videos)}
+header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font:800 clamp(2rem,5vw,3rem)/1 var(--display);letter-spacing:-.02em;margin:0}
+h1 mark{background:linear-gradient(transparent 55%,var(--hi) 55%);color:inherit;padding:0 .08em}
+.count{font:500 13px var(--mono);color:var(--muted)}
+.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:2px solid var(--line);scrollbar-width:none}
+.tab{border:0;border-radius:10px 10px 0 0;background:transparent;color:var(--muted);padding:10px 14px;font:700 15px var(--display);white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-2px}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--tc);background:var(--card)}
+.tab span{font:500 12px var(--mono);color:var(--muted);margin-left:4px}
+.capture{display:flex;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:10px;box-shadow:0 2px 0 var(--line)}
+.capture textarea{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:500 17px/1.4 var(--body);resize:none;padding:8px;outline:none}
+.capture:focus-within{border-color:var(--acc)}
+button{font:600 14px var(--body);cursor:pointer;border-radius:9px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);padding:9px 14px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.primary{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.tools input,.tools select{font:14px var(--body);color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:9px;padding:8px 10px}
+.tools input{flex:1 1 200px;min-width:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:6px 11px;border-radius:99px;font-size:13px;background:var(--chip);border-color:transparent}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{position:relative;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:0;font-weight:400;
+  background-image:repeating-linear-gradient(var(--card) 0 25px,var(--rule) 25px 26px);background-position:0 46px;
+  box-shadow:0 1px 0 var(--line),0 6px 14px -10px rgba(0,0,0,.35);transition:transform .15s;display:flex;flex-direction:column;min-width:0}
+.card:hover{transform:translateY(-2px) rotate(-.3deg)}
+.card .top{background:var(--card);border-bottom:2px solid var(--acc);padding:12px 14px 8px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.card .body{padding:6px 14px 14px;display:grid;gap:4px;line-height:26px;min-width:0}
+.prem{font:700 17px/26px var(--display);overflow-wrap:anywhere}
+.sub{color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.sub b{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--acc)}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.tag{font:500 12px var(--mono);color:var(--blue)}
+.pill{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;padding:3px 8px;border-radius:99px;border:1.5px solid currentColor}
+.st0{color:var(--st1)}.st1{color:var(--st2)}.st2{color:var(--st3)}.st3{color:var(--st4)}.st4{color:var(--st5)}
+.laughs{font:500 12px var(--mono);color:var(--muted)}
+.card.flash{animation:flash 1.2s}
+@keyframes flash{0%,40%{box-shadow:0 0 0 4px var(--hi)}}
+.empty{border:2px dashed var(--line);border-radius:12px;padding:40px 20px;text-align:center;color:var(--muted)}
+.empty strong{display:block;font:700 20px var(--display);color:var(--ink);margin-bottom:6px}
+.err{color:var(--red);font-size:14px;margin:0}
+dialog{border:0;border-radius:14px;padding:0;width:min(640px,calc(100vw - 32px));background:var(--card);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.35);--acc:var(--c-skits)}
+dialog[data-sec="stories"]{--acc:var(--c-stories)}dialog[data-sec="novels"]{--acc:var(--c-novels)}dialog[data-sec="videos"]{--acc:var(--c-videos)}
+dialog::backdrop{background:rgba(15,20,30,.5)}
+.ed{display:grid;gap:14px;padding:22px}
+.ed h2{margin:0;font:800 22px var(--display);border-bottom:2px solid var(--acc);padding-bottom:8px}
+#fields{display:grid;gap:14px}
+.f{display:grid;gap:4px;min-width:0}
+.f label,.f .lbl{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.f small{color:var(--muted);font-size:12px}
+.f input,.f textarea,.f select{font:15px/1.45 var(--body);color:var(--ink);background:var(--desk);border:1.5px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+.f textarea{resize:vertical;min-height:64px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.row2{grid-template-columns:1fr}.capture{flex-direction:column}}
+.lrow{display:flex;gap:6px}
+.lrow button{flex:1;padding:8px 4px;font-size:13px}
+.lrow button[aria-pressed="true"]{background:var(--hi);color:#1d2433;border-color:var(--hi)}
+.actions{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.danger{color:var(--red);border-color:transparent;background:transparent;padding-inline:4px}
+.confirm{display:flex;gap:8px;align-items:center;font-size:14px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){.card,.card:hover{transition:none;transform:none}.card.flash{animation:none}}
+</style>
+<style>body{margin:0;-webkit-text-size-adjust:100%}[hidden]{display:none!important}@media (max-width:520px){.capture textarea{min-height:3.4em}}</style>
+<style>
+.sync{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sync button{padding:6px 11px;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:6px}
+.dot.ok{background:var(--c-novels)}.dot.busy{background:var(--st3)}.dot.bad{background:var(--red)}
+.status{font:500 13px var(--mono);color:var(--muted)}
+.help{font-size:14px;color:var(--muted);margin:0}
+.help ol{padding-left:20px;margin:6px 0 0;display:grid;gap:4px}
+.help a{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap" data-sec="skits">
+  <header>
+    <h1>Bit <mark>Drawer</mark></h1>
+    <div class="sync">
+      <span class="status" id="status"><span class="dot"></span>Starting…</span>
+      <button type="button" id="expBtn">Backup &amp; export</button>
+      <button type="button" id="setupBtn">Sync settings</button>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <form class="capture" id="capForm">
+    <label for="cap" hidden>New idea</label>
+    <textarea id="cap" rows="1"></textarea>
+    <button class="primary" type="submit">Save idea</button>
+  </form>
+  <p class="err" id="err" hidden></p>
+
+  <div class="tools">
+    <label for="q" hidden>Search</label>
+    <input id="q" type="search" placeholder="Search this drawer…">
+    <label for="sort" hidden>Sort</label>
+    <select id="sort">
+      <option value="new">Newest</option>
+      <option value="rated">Highest rated</option>
+      <option value="edited">Recently edited</option>
+    </select>
+    <button id="rand" type="button">Pull a random one</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <span class="count" id="count"></span>
+  <div id="list"></div>
+</div>
+
+<dialog id="dlg">
+  <form class="ed" method="dialog">
+    <h2 id="edTitle">Edit</h2>
+    <div id="fields"></div>
+    <div class="row2">
+      <div class="f"><label for="e-status">Stage</label><select id="e-status"></select></div>
+      <div class="f"><label for="e-tags">Tags</label><input id="e-tags" placeholder="realtor, dreams, mom"></div>
+    </div>
+    <div class="f"><span class="lbl" id="rateLbl">Rating</span><div class="lrow" id="lrow"></div></div>
+    <div class="actions">
+      <span id="delZone"></span>
+      <span style="display:flex;gap:8px"><button type="button" id="cancel">Cancel</button><button type="button" class="primary" id="save">Save</button></span>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="exp">
+  <form class="ed" method="dialog">
+    <h2>Backup &amp; export</h2>
+    <p class="help">Save a copy of every idea in all four drawers whenever you want.</p>
+    <div class="f"><span class="lbl">PDF</span>
+      <small>A readable copy of everything: every skit, story, novel and video with all its notes.</small>
+      <button type="button" class="primary" id="pdfBtn">Download PDF</button></div>
+    <div class="f"><span class="lbl">Backup file</span>
+      <small>A .json file you can load back into Bit Drawer later to restore everything.</small>
+      <button type="button" id="jsonBtn">Download backup file</button></div>
+    <div class="f"><span class="lbl">Restore</span>
+      <small>Load a backup file. Ideas in it are added back; nothing you have now is removed.</small>
+      <label for="restoreFile" hidden>Backup file</label>
+      <input type="file" id="restoreFile" accept=".json,application/json"></div>
+    <p class="help" id="expMsg" hidden></p>
+    <div class="actions"><span></span><button type="button" id="expClose">Done</button></div>
+  </form>
+</dialog>
+
+<dialog id="setup">
+  <form class="ed" method="dialog" id="setupForm">
+    <h2>Sync with GitHub</h2>
+    <div class="help">Your ideas are saved to <b>data.json</b> in a private GitHub repo, so every device sees the same drawer. Do this once per device.
+      <ol>
+        <li>Make a <b>private</b> repo (for example <code>bit-data</code>) and upload the data.json file into it.</li>
+        <li>Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>: pick only that repo, and set <b>Contents</b> to <b>Read and write</b>.</li>
+        <li>Paste it below. It stays in this browser only.</li>
+      </ol></div>
+    <div class="row2">
+      <div class="f"><label for="s-owner">GitHub username</label><input id="s-owner" autocomplete="username" autocapitalize="off"></div>
+      <div class="f"><label for="s-repo">Data repo</label><input id="s-repo" value="bit-data" autocapitalize="off"></div>
+    </div>
+    <div class="f"><label for="s-token">Access token</label><input id="s-token" type="password" autocomplete="off" placeholder="github_pat_…"></div>
+    <p class="err" id="setupErr" hidden></p>
+    <div class="actions">
+      <button type="button" class="danger" id="disconnect">Disconnect this device</button>
+      <span style="display:flex;gap:8px"><button type="button" id="setupCancel">Cancel</button><button type="submit" class="primary" id="connect">Connect</button></span>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const SECTIONS={
+  skits:{label:"Skits",one:"skit",many:"skits",main:"premise",tc:"var(--c-skits)",
+    cap:"New skit idea — just the premise. Enter to save.",
+    stages:[["spark","Spark"],["draft","Draft"],["rehearsed","Rehearsed"],["shot","Shot"]],
+    rate:["How funny is it?","Smirk","Laugh","Cry-laughing"],
+    fields:[["premise","Premise","area"],["game","The game","area","The one funny pattern that keeps escalating."],
+      ["characters","Characters","text",null,"half"],["setting","Setting","text",null,"half"],
+      ["button","The button","text","How it ends — the last laugh."],["notes","Notes, lines, beats","long"]],
+    card:[["game","Game"],["characters","Who"]]},
+  stories:{label:"Short Stories",one:"story",many:"stories",main:"premise",tc:"var(--c-stories)",
+    cap:"New short story idea — a premise, an image, a dream. Enter to save.",
+    stages:[["idea","Idea"],["drafting","Drafting"],["revising","Revising"],["posted","Posted"]],
+    rate:["How much does it pull at you?","Curious","Hooked","Obsessed"],
+    fields:[["premise","Premise","area"],["title","Working title","text"],
+      ["pov","Point of view / narrator","text",null,"half"],["setting","Setting","text",null,"half"],
+      ["source","Where it came from","text","A dream, an overheard line, a memory…"],
+      ["turn","The turn","area","The twist, reveal or moment everything shifts."],
+      ["ending","Last image","text","The final beat you want the reader left with."],
+      ["notes","Notes and draft lines","long"]],
+    card:[["title","Title"],["turn","Turn"]]},
+  novels:{label:"Novel Ideas",one:"novel",many:"novels",main:"logline",tc:"var(--c-novels)",
+    cap:"New novel idea — the logline in a sentence. Enter to save.",
+    stages:[["seed","Seed"],["outlining","Outlining"],["drafting","Drafting"],["revising","Revising"]],
+    rate:["How badly do you want to write it?","Someday","Soon","Next"],
+    fields:[["logline","Logline","area"],["title","Working title","text"],
+      ["protagonist","Protagonist(s)","text",null,"half"],["conflict","Antagonist / central conflict","text",null,"half"],
+      ["world","World and setting","area"],["themes","Themes","text","What it's really about underneath."],
+      ["ending","Ending (if you know it)","area"],["notes","Notes, scenes, research","long"]],
+    card:[["title","Title"],["protagonist","Who"],["themes","Themes"]]},
+  videos:{label:"YouTube Videos",one:"video",many:"videos",main:"idea",tc:"var(--c-videos)",
+    cap:"New video idea — the title you'd click on. Enter to save.",
+    stages:[["idea","Idea"],["scripted","Scripted"],["filmed","Filmed"],["edited","Edited"],["posted","Posted"]],
+    rate:["How clickable is it?","Solid","Strong","Banger"],
+    fields:[["idea","Video title / idea","area"],
+      ["format","Format","select",null,"half",["","Short","Long-form","Tutorial","Vlog","Skit","Review","Day in the life","Talking head","Livestream"]],
+      ["length","Target length","text",null,"half"],
+      ["hook","The hook","area","What happens in the first 5 seconds."],
+      ["thumbnail","Thumbnail idea","text","Image + 3 words max."],
+      ["outline","Outline / talking points","long"],["notes","Notes, b-roll, links","long"]],
+    card:[["hook","Hook"],["format","Format"]]}
+};
+const ORDER=["skits","stories","novels","videos"];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+function showErr(m){$("err").textContent=m;$("err").hidden=!m}
+
+/* ---------- storage: local cache + GitHub file sync ---------- */
+let items=ls.get("bd-items",[]), sha=ls.get("bd-sha",null), dirty=ls.get("bd-dirty",false), cfg=ls.get("bd-cfg",null);
+let pushTimer=null, busy=false;
+function setStatus(kind,text){$("status").innerHTML=`<span class="dot ${kind}"></span>${esc(text)}`}
+function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+function b64enc(str){const b=new TextEncoder().encode(str);let s="";for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode(...b.subarray(i,i+0x8000));return btoa(s)}
+function b64dec(b64){const s=atob(b64.replace(/\n/g,""));return new TextDecoder().decode(Uint8Array.from(s,c=>c.charCodeAt(0)))}
+function merge(a,b){const m=new Map();for(const x of [...a,...b]){const y=m.get(x.id);if(!y||(x.updatedAt||0)>(y.updatedAt||0))m.set(x.id,x)}return [...m.values()]}
+function saveLocal(){ls.set("bd-items",items);ls.set("bd-sha",sha);ls.set("bd-dirty",dirty)}
+function api(path,opts={}){return fetch(`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/data.json${path||""}`,
+  {cache:"no-store",...opts,headers:{Authorization:`Bearer ${cfg.token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",...(opts.headers||{})}})}
+async function pull(){
+  const r=await api();
+  if(r.status===404){sha=null;return []}
+  if(r.status===401||r.status===403)throw {code:"auth"};
+  if(!r.ok)throw {code:"net"};
+  const j=await r.json();sha=j.sha;
+  let content=j.content;
+  if(!content&&j.git_url){const raw=await fetch(j.git_url,{cache:"no-store",headers:{Authorization:`Bearer ${cfg.token}`}}).then(x=>x.json());content=raw.content}
+  const data=JSON.parse(b64dec(content||"")||"{}");
+  return Array.isArray(data.items)?data.items:[];
+}
+async function sync(){
+  if(!cfg){setStatus("","Saved on this device only");return}
+  if(busy){schedule();return}
+  busy=true;setStatus("busy","Syncing…");
+  try{
+    const remote=await pull();
+    items=merge(remote,items);render();
+    const rm=new Map(remote.map(r=>[r.id,r.updatedAt]));
+    if(dirty||items.some(i=>rm.get(i.id)!==i.updatedAt)){
+      const body={message:"Update ideas",content:b64enc(JSON.stringify({version:1,items},null,1))};if(sha)body.sha=sha;
+      const r=await api("",{method:"PUT",body:JSON.stringify(body),headers:{"Content-Type":"application/json"}});
+      if(r.status===409||r.status===422){busy=false;dirty=true;saveLocal();return sync()}
+      if(r.status===401||r.status===403)throw {code:"auth"};
+      if(!r.ok)throw {code:"net"};
+      sha=(await r.json()).content.sha;
+    }
+    dirty=false;saveLocal();setStatus("ok","Synced to GitHub");
+  }catch(e){
+    saveLocal();
+    setStatus("bad",e.code==="auth"?"GitHub refused the token — check sync settings":"Not synced yet — will retry");
+    if(e.code!=="auth")setTimeout(sync,15000);
+  }finally{busy=false}
+}
+function schedule(){clearTimeout(pushTimer);pushTimer=setTimeout(sync,900)}
+function commit(){dirty=true;saveLocal();render();if(cfg){setStatus("busy","Saving…");schedule()}else setStatus("","Saved on this device only")}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&cfg)sync()});
+window.addEventListener("online",()=>cfg&&sync());
+
+/* ---------- UI ---------- */
+let sec="skits", stage="all", editing=null, rating=0;
+{const h=location.hash.slice(1);const s=SECTIONS[h]?h:ls.get("bd-sec","skits");if(SECTIONS[s])sec=s}
+const live=k=>items.filter(i=>i.sec===k&&!i.deleted);
+
+function renderTabs(){$("tabs").innerHTML=ORDER.map(k=>`<button type="button" role="tab" class="tab" style="--tc:${SECTIONS[k].tc}" data-k="${k}" aria-selected="${k===sec}">${SECTIONS[k].label}<span>${live(k).length}</span></button>`).join("")}
+function renderChips(){$("chips").innerHTML=[["all","All"],...SECTIONS[sec].stages].map(([k,l])=>`<button type="button" class="chip" data-s="${k}" aria-pressed="${k===stage}">${l}</button>`).join("")}
+function setSec(k){sec=k;stage="all";$("wrap").dataset.sec=k;$("cap").placeholder=SECTIONS[k].cap;$("q").value="";ls.set("bd-sec",k);renderChips();render()}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(b)setSec(b.dataset.k)});
+$("chips").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(!b)return;stage=b.dataset.s;renderChips();render()});
+$("q").addEventListener("input",render);$("sort").addEventListener("change",render);
+
+function stageIdx(S,v){const i=S.stages.findIndex(s=>s[0]===v);return i<0?0:i}
+function visible(){
+  const S=SECTIONS[sec], q=$("q").value.trim().toLowerCase(), sort=$("sort").value;
+  let v=live(sec).filter(s=>(stage==="all"||s.status===stage)&&(!q||[...S.fields.map(f=>s[f[0]]),(s.tags||[]).join(" ")].join(" ").toLowerCase().includes(q)));
+  v.sort((a,b)=>sort==="rated"?(b.laughs||0)-(a.laughs||0)||(b.createdAt||0)-(a.createdAt||0):sort==="edited"?(b.updatedAt||0)-(a.updatedAt||0):(b.createdAt||0)-(a.createdAt||0));
+  return v;
+}
+function render(){
+  const S=SECTIONS[sec], n=live(sec).length;
+  renderTabs();
+  $("count").textContent=`${n} ${n===1?S.one:S.many} in this drawer`;
+  if(!n){$("list").innerHTML=`<div class="empty"><strong>This drawer's empty.</strong>${cfg?"Type an idea in the box above and press Enter.":"Connect GitHub with <b>Sync settings</b> to load your saved ideas, or type a new one above."}</div>`;return}
+  const v=visible();
+  if(!v.length){$("list").innerHTML=`<div class="empty"><strong>Nothing matches.</strong>Try a different search or stage.</div>`;return}
+  $("list").innerHTML=`<div class="grid">`+v.map(s=>{const si=stageIdx(S,s.status);return `<button type="button" class="card" data-id="${esc(s.id)}">
+    <div class="top"><span class="pill st${si}">${esc(S.stages[si][1])}</span><span class="laughs">${s.laughs?S.rate[s.laughs]:""}</span></div>
+    <div class="body"><div class="prem">${esc(s[S.main]||"Untitled")}</div>
+    ${S.card.map(([f,l])=>s[f]?`<div class="sub"><b>${l}</b> ${esc(s[f])}</div>`:"").join("")}
+    ${(s.tags||[]).length?`<div class="tags">${s.tags.map(t=>`<span class="tag">#${esc(t)}</span>`).join("")}</div>`:""}
+    </div></button>`}).join("")+`</div>`;
+}
+$("list").addEventListener("click",e=>{const c=e.target.closest(".card");if(c)openEd(c.dataset.id)});
+
+$("cap").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("capForm").requestSubmit()}});
+$("capForm").addEventListener("submit",e=>{e.preventDefault();const t=$("cap").value.trim();if(!t)return;
+  const S=SECTIONS[sec], now=Date.now(), doc={id:newId(),sec,tags:[],status:S.stages[0][0],laughs:0,createdAt:now,updatedAt:now};
+  S.fields.forEach(f=>doc[f[0]]="");doc[S.main]=t;items.push(doc);$("cap").value="";commit()});
+
+$("rand").addEventListener("click",()=>{const v=visible();if(!v.length)return;const s=v[Math.floor(Math.random()*v.length)];
+  const el=document.querySelector(`.card[data-id="${CSS.escape(s.id)}"]`);if(el){el.scrollIntoView({block:"center",behavior:"smooth"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")}
+  setTimeout(()=>openEd(s.id),450)});
+
+function setRating(n){rating=n;document.querySelectorAll("#lrow button").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.l===n))}
+$("lrow").addEventListener("click",e=>{const b=e.target.closest("[data-l]");if(b)setRating(+b.dataset.l===rating?0:+b.dataset.l)});
+function resetDel(){$("delZone").innerHTML=`<button type="button" class="danger" id="del">Delete ${SECTIONS[sec].one}</button>`}
+$("delZone").addEventListener("click",e=>{
+  if(e.target.id==="del")$("delZone").innerHTML=`<span class="confirm">Delete for good? <button type="button" class="danger" id="delYes">Yes, delete</button><button type="button" id="delNo">Keep</button></span>`;
+  else if(e.target.id==="delNo")resetDel();
+  else if(e.target.id==="delYes"){const i=items.findIndex(x=>x.id===editing);if(i>=0)items[i]={id:editing,sec,deleted:true,updatedAt:Date.now()};$("dlg").close();commit()}
+});
+function fieldHTML([k,label,type,help,,opts],val){
+  const id="e-"+k, h=help?`<small>${help}</small>`:"";
+  const ctl=type==="text"?`<input id="${id}" value="${esc(val)}">`
+    :type==="select"?`<select id="${id}">${opts.map(o=>`<option value="${esc(o)}"${o===val?" selected":""}>${o||"—"}</option>`).join("")}</select>`
+    :`<textarea id="${id}" rows="${type==="long"?5:2}">${esc(val)}</textarea>`;
+  return `<div class="f"><label for="${id}">${label}</label>${h}${ctl}</div>`;
+}
+function openEd(id){const S=SECTIONS[sec], s=items.find(x=>x.id===id);if(!s)return;editing=id;resetDel();
+  $("dlg").dataset.sec=sec;$("edTitle").textContent=`Edit ${S.one}`;
+  let html="",buf=[];const flush=()=>{if(buf.length){html+=`<div class="row2">${buf.join("")}</div>`;buf=[]}};
+  S.fields.forEach(f=>{const h=fieldHTML(f,s[f[0]]??"");if(f[4]==="half"){buf.push(h);if(buf.length===2)flush()}else{flush();html+=h}});flush();
+  $("fields").innerHTML=html;
+  $("e-status").innerHTML=S.stages.map(([k,l])=>`<option value="${k}">${l}</option>`).join("");
+  $("e-status").value=S.stages[stageIdx(S,s.status)][0];
+  $("e-tags").value=(s.tags||[]).join(", ");
+  $("rateLbl").textContent=S.rate[0];
+  $("lrow").innerHTML=S.rate.slice(1).map((l,i)=>`<button type="button" data-l="${i+1}">${l}</button>`).join("");
+  setRating(s.laughs||0);$("dlg").showModal()}
+$("cancel").addEventListener("click",()=>$("dlg").close());
+$("save").addEventListener("click",()=>{const S=SECTIONS[sec], s=items.find(x=>x.id===editing);if(!s)return;
+  S.fields.forEach(([k,,type])=>{const v=$("e-"+k).value;s[k]=type==="long"?v:v.trim()});
+  if(!s[S.main])s[S.main]="Untitled "+S.one;
+  Object.assign(s,{status:$("e-status").value,tags:$("e-tags").value.split(",").map(t=>t.trim().replace(/^#/,"").toLowerCase()).filter(Boolean),laughs:rating,updatedAt:Date.now()});
+  $("dlg").close();commit()});
+
+/* ---------- sync settings ---------- */
+function openSetup(){$("s-owner").value=cfg?.owner||"";$("s-repo").value=cfg?.repo||"bit-data";$("s-token").value=cfg?.token||"";$("setupErr").hidden=true;$("disconnect").hidden=!cfg;$("setup").showModal()}
+$("setupBtn").addEventListener("click",openSetup);
+$("setupCancel").addEventListener("click",()=>$("setup").close());
+$("disconnect").addEventListener("click",()=>{cfg=null;ls.set("bd-cfg",null);$("setup").close();setStatus("","Saved on this device only")});
+$("setupForm").addEventListener("submit",async e=>{e.preventDefault();
+  const c={owner:$("s-owner").value.trim(),repo:$("s-repo").value.trim(),token:$("s-token").value.trim()};
+  if(!c.owner||!c.repo||!c.token){$("setupErr").textContent="Fill in all three fields.";$("setupErr").hidden=false;return}
+  $("connect").disabled=true;$("connect").textContent="Checking…";
+  try{
+    const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`,{cache:"no-store",headers:{Authorization:`Bearer ${c.token}`,Accept:"application/vnd.github+json"}});
+    if(r.status===401){throw "That token didn't work. Copy it again from GitHub and paste the whole thing."}
+    if(r.status===404||r.status===403){throw `Can't reach ${c.owner}/${c.repo}. Check the username and repo name, and that the token has access to that repo.`}
+    if(!r.ok)throw "GitHub didn't answer. Check your connection and try again.";
+    cfg=c;ls.set("bd-cfg",cfg);sha=null;$("setup").close();sync();
+  }catch(msg){$("setupErr").textContent=typeof msg==="string"?msg:"GitHub didn't answer. Check your connection and try again.";$("setupErr").hidden=false}
+  finally{$("connect").disabled=false;$("connect").textContent="Connect"}
+});
+
+/* ---------- backup & export ---------- */
+const stamp=()=>new Date().toISOString().slice(0,10);
+function expMsg(m){$("expMsg").textContent=m;$("expMsg").hidden=!m}
+function downloadBlob(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+$("expBtn").addEventListener("click",()=>{expMsg("");$("exp").showModal()});
+$("expClose").addEventListener("click",()=>$("exp").close());
+$("jsonBtn").addEventListener("click",()=>{downloadBlob(new Blob([JSON.stringify({version:1,exported:new Date().toISOString(),items},null,1)],{type:"application/json"}),`bit-drawer-backup-${stamp()}.json`);expMsg("Backup file downloaded.")});
+$("restoreFile").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());const inc=Array.isArray(d.items)?d.items:null;if(!inc)throw 0;
+    const before=items.filter(i=>!i.deleted).length;
+    const now=Date.now();const known=new Set(items.map(i=>i.id));
+    for(const x of inc){if(!x||!x.id||!x.sec||x.deleted)continue;const cur=items.find(i=>i.id===x.id);
+      if(!cur)items.push(x);else if(cur.deleted||(x.updatedAt||0)>(cur.updatedAt||0))Object.assign(cur,x,{deleted:false,updatedAt:Math.max(now,x.updatedAt||0)});}
+    commit();expMsg(`Restored. You now have ${items.filter(i=>!i.deleted).length} ideas (was ${before}).`)}
+  catch{expMsg("That file isn't a Bit Drawer backup. Pick a file named bit-drawer-backup-….json.")}
+  e.target.value=""});
+function pdfSafe(s){return String(s??"").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[–—]/g,"-").replace(/…/g,"...").replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g,"")}
+let pdfLibLoading=null;
+function loadPdfLib(){if(window.PDFLib)return Promise.resolve();return pdfLibLoading??=new Promise((ok,bad)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js";s.onload=ok;s.onerror=()=>{pdfLibLoading=null;bad()};document.head.appendChild(s)})}
+$("pdfBtn").addEventListener("click",async()=>{
+  $("pdfBtn").disabled=true;$("pdfBtn").textContent="Making PDF…";
+  try{
+    await loadPdfLib();
+    const {PDFDocument,StandardFonts,rgb}=window.PDFLib;
+    const pdf=await PDFDocument.create();pdf.setTitle("Bit Drawer");
+    const reg=await pdf.embedFont(StandardFonts.Helvetica), bold=await pdf.embedFont(StandardFonts.HelveticaBold), ital=await pdf.embedFont(StandardFonts.HelveticaOblique);
+    const W=612,H=792,M=54,TW=W-2*M; let page=pdf.addPage([W,H]), y=M;
+    const C=(r,g,b)=>rgb(r/255,g/255,b/255), INK=C(29,36,51), MUTED=C(93,102,120);
+    const need=h=>{if(y+h>H-M){page=pdf.addPage([W,H]);y=M}};
+    const wrap=(str,font,size)=>{const out=[];for(const para of pdfSafe(str).split(/\r?\n/)){let line="";for(const word of para.split(/\s+/)){const t=line?line+" "+word:word;
+      if(font.widthOfTextAtSize(t,size)<=TW){line=t;continue}if(line)out.push(line);
+      let w=word;while(font.widthOfTextAtSize(w,size)>TW){let i=w.length;while(i>1&&font.widthOfTextAtSize(w.slice(0,i),size)>TW)i--;out.push(w.slice(0,i));w=w.slice(i)}line=w}out.push(line)}return out};
+    const text=(str,size,font=reg,color=INK,gap=4)=>{for(const l of wrap(str,font,size)){need(size+gap);page.drawText(l,{x:M,y:H-y-size,size,font,color});y+=size+gap}};
+    text("Bit Drawer",26,bold);text(`Exported ${new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"})}`,10,reg,MUTED);y+=10;
+    const colors={skits:C(214,69,61),stories:C(44,95,214),novels:C(31,138,91),videos:C(194,65,12)};
+    for(const k of ORDER){const S=SECTIONS[k], list=live(k).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      need(120);y+=14;text(`${S.label} (${list.length})`,18,bold,colors[k]);
+      page.drawLine({start:{x:M,y:H-y},end:{x:W-M,y:H-y},thickness:1.5,color:colors[k]});y+=12;
+      if(!list.length){text("Nothing here yet.",10,ital,MUTED);continue}
+      list.forEach((s,i)=>{need(50);
+        text(`${i+1}. ${s[S.main]||"Untitled"}`,12,bold);
+        const meta=[S.stages[stageIdx(S,s.status)][1],s.laughs?S.rate[s.laughs]:"",(s.tags||[]).map(t=>"#"+t).join(" ")].filter(Boolean).join("  -  ");
+        text(meta,9,reg,MUTED);
+        for(const [f,label] of S.fields){if(f===S.main||!s[f])continue;text(label.toUpperCase(),8,bold,colors[k],2);text(s[f],10,reg,INK,3);y+=2}
+        y+=10});
+    }
+    const pages=pdf.getPages();pages.forEach((p,i)=>{const t=`Bit Drawer  -  page ${i+1} of ${pages.length}`;p.drawText(t,{x:W-M-reg.widthOfTextAtSize(t,8),y:24,size:8,font:reg,color:C(150,150,150)})});
+    downloadBlob(new Blob([await pdf.save()],{type:"application/pdf"}),`bit-drawer-${stamp()}.pdf`);expMsg("PDF downloaded.");
+  }catch(err){console.error(err);expMsg("Couldn't make the PDF. Check your internet connection and try again.")}
+  finally{$("pdfBtn").disabled=false;$("pdfBtn").textContent="Download PDF"}
+});
+
+setSec(sec);
+if(cfg)sync();else{setStatus("","Saved on this device only");if(!items.length)openSetup()}
+</script>
+</body>
+</html>
